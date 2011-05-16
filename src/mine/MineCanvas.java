@@ -12,74 +12,61 @@ import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
 
 public class MineCanvas extends Canvas implements CommandListener {
-	private static MineMIDlet pMain;
-	private static Display display;
+	private  MineMIDlet mianMIDlet;
+	private  Display display;
 
-	private static final int GRIDSIZE = 8;
-	private static final int MINECOUNT = 10;
-	private static int Width, Height, selx, sely, leftbomb;
-	private static byte grid[][]; // 用于存放扫雷数据
-	private static boolean gameover; // 是否结束
-	private static Random rand; // 产生随机数
+	private int gridSize = 8;
+	private int mineCount = 10;
+	private  int width, height, selx, sely, leftbomb;
+	private  byte grid[][]; // 用于存放扫雷数据
+	private  boolean gameover; // 是否结束
+	private  Random rand; // 产生随机数
 
-	private static Image ExScreenImg; // 扩展图像层
-	private static Graphics Exg;
-	private static Image TitleImg, MineImg, fMineImg, HideImg, fHideImg,
-			FlagImg, fFlagImg, NumImg[], fNumImg[];
+	private  Image exScreenImg; // 扩展图像层
+	private  Graphics g;
+	private  Image titleImg, mineImg, fmineImg, hideImg, fhideImg,
+			flagImg, fflagImg, numImg[], fnumImg[];
 
 	// 定义菜单
-	// private static Command ContCmd = new Command("继续游戏",Command.OK, 0);
-	private static Command StartCmd = new Command("重新游戏", Command.OK, 1);
-	private static Command ExitCmd = new Command("退出", Command.EXIT, 2);
+	private static Command startCmd = new Command("重新游戏", Command.OK, 1);
+	private static Command exitCmd = new Command("退出", Command.EXIT, 2);
 
-	// private static Command HelpCmd = new Command("帮助信息",Command.OK, 3);
-	// private static Command OKCmd = new Command("确定",Command.OK, 0);
-
-	// final private static String openSnd="开启声音", closeSnd="关闭声音",
-	// openVib="开启振动", closeVib="关闭振动";
-	// private static Command SndCmd, VibCmd;
-
-	// public static boolean Snd, Vib;
-
-	public MineCanvas(MineMIDlet mine) {
+	private int degree;
+	public MineCanvas(MineMIDlet mine,int degree) {
 		super();
-		pMain = mine;
+		this.degree = degree;
+		setMineCount();
+		mianMIDlet = mine;
 
-		Width = (getWidth() - 15) / GRIDSIZE;// (getWidth()-1) / GRIDSIZE;
-		Height = (getHeight() - 10) / GRIDSIZE;
-		System.out.println(Width + "===" + Height);
-		Width = 10;
-		Height = 10;
-
-		grid = new byte[Height][Width];
+		grid = new byte[height][width];
 		rand = new Random((new Date()).getTime());
-		NumImg = new Image[8];
-		fNumImg = new Image[8];
+		numImg = new Image[8];
+		fnumImg = new Image[8];
 
 		gameover = true;
 
 		int i;
 		// 预先载入图片
 		try {
-			TitleImg = Image.createImage("/images/title.png");
-			MineImg = Image.createImage("/images/mine.png");
-			fMineImg = Image.createImage("/images/minef.png");
-			HideImg = Image.createImage("/images/hide.png");
-			fHideImg = Image.createImage("/images/hidef.png");
-			FlagImg = Image.createImage("/images/flag.png");
-			fFlagImg = Image.createImage("/images/flagf.png");
+			titleImg = Image.createImage("/images/title.png");
+			mineImg = Image.createImage("/images/mine.png");
+			fmineImg = Image.createImage("/images/minef.png");
+			hideImg = Image.createImage("/images/hide.png");
+			fhideImg = Image.createImage("/images/hidef.png");
+			flagImg = Image.createImage("/images/flag.png");
+			fflagImg = Image.createImage("/images/flagf.png");
 			for (i = 1; i <= 8; i++) {
-				NumImg[i - 1] = Image.createImage("/images/n" + i + ".png");
-				fNumImg[i - 1] = Image.createImage("/images/n" + i + "f.png");
+				numImg[i - 1] = Image.createImage("/images/n" + i + ".png");
+				fnumImg[i - 1] = Image.createImage("/images/n" + i + "f.png");
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
 		// 初始化图像缓存（宽度必须为8的倍数）
-		ExScreenImg = Image.createImage(Width * GRIDSIZE + 15, Height
-				* GRIDSIZE + 1);
-		Exg = ExScreenImg.getGraphics();
+		exScreenImg = Image.createImage(width * gridSize + 15, height
+				* gridSize + 1);
+		g = exScreenImg.getGraphics();
 
 		// Snd = true;
 		// Vib = true;
@@ -90,15 +77,15 @@ public class MineCanvas extends Canvas implements CommandListener {
 		// else VibCmd = new Command(openVib, Command.OK, 5);
 
 		// 添加菜单
-		addCommand(StartCmd);
-		addCommand(ExitCmd);
+		addCommand(startCmd);
+		addCommand(exitCmd);
 		// addCommand(HelpCmd);
 		// addCommand(SndCmd);
 		// addCommand(VibCmd);
 		setCommandListener(this);
 
 		// 画标题
-		Exg.drawImage(TitleImg, 0, 0, 20);
+		g.drawImage(titleImg, 0, 0, 20);
 		newGame();
 	}
 
@@ -111,7 +98,7 @@ public class MineCanvas extends Canvas implements CommandListener {
 	protected void paint(Graphics g) {
 		// TODO Auto-generated method stub
 		g.fillRect(0, 0, this.getWidth(), this.getHeight());
-		g.drawImage(ExScreenImg, 0, 0, 0);
+		g.drawImage(exScreenImg, 0, 0, 0);
 	}
 
 	protected void keyPressed(int kcode) // 按键响应
@@ -122,8 +109,10 @@ public class MineCanvas extends Canvas implements CommandListener {
 		int bomb = 0;
 		int oldx = selx;
 		int oldy = sely;
+		System.out.println("keyCode :"+kcode);
 		switch (kcode) {
-		case '1': // 1,挖开
+		case '1':
+		case -5:// 1,挖开
 			System.gc(); // 先释放无用的资源
 			if (grid[sely][selx] >= 10 && grid[sely][selx] < 20) {
 				grid[sely][selx] -= 10;
@@ -172,12 +161,12 @@ public class MineCanvas extends Canvas implements CommandListener {
 		}
 		if (selx < 0)
 			selx = 0;
-		if (selx > Width - 1)
-			selx = Width - 1;
+		if (selx > width - 1)
+			selx = width - 1;
 		if (sely < 0)
 			sely = 0;
-		if (sely > Height - 1)
-			sely = Height - 1;
+		if (sely > height - 1)
+			sely = height - 1;
 
 		DrawBlock(oldx, oldy, false);
 		if (bomb == 0)
@@ -185,32 +174,32 @@ public class MineCanvas extends Canvas implements CommandListener {
 		else
 			DrawBlock(selx, sely, true);
 
-		 Exg.setColor(0xffffff);
-		Exg.fillRect(Width * GRIDSIZE + 2, 26, 13, 13);
-		Exg.setColor(0);
+		 g.setColor(0xffffff);
+		g.fillRect(width * gridSize + 2, 26, 13, 13);
+		g.setColor(0);
 
-		Exg.drawString("" + leftbomb, Width * GRIDSIZE + 15, 26, Graphics.RIGHT
+		g.drawString("" + leftbomb, width * gridSize + 15, 26, Graphics.RIGHT
 				| Graphics.TOP);
 
 		if (bomb == 1) {
 			gameover = true;
 			// SoundPlay(1);
 			// if (Vib) Vibrator.triggerVibrator(150);
-			Exg.drawString("爆", Width * GRIDSIZE + 15, 39, Graphics.RIGHT
+			g.drawString("爆", width * gridSize + 15, 39, Graphics.RIGHT
 					| Graphics.TOP);
-			Exg.drawString("炸", Width * GRIDSIZE + 15, 52, Graphics.RIGHT
+			g.drawString("炸", width * gridSize + 15, 52, Graphics.RIGHT
 					| Graphics.TOP);
 		}
 		if (Judge()) {
 			gameover = true;
 			// SoundPlay(0);
-			Exg.drawString("成", Width * GRIDSIZE + 15, 39, Graphics.RIGHT
+			g.drawString("成", width * gridSize + 15, 39, Graphics.RIGHT
 					| Graphics.TOP);
-			Exg.drawString("功", Width * GRIDSIZE + 15, 52, Graphics.RIGHT
+			g.drawString("功", width * gridSize + 15, 52, Graphics.RIGHT
 					| Graphics.TOP);
 		}
 		this.repaint();
-		// ExScreenImg.blitToScreen(0,0);
+		// exScreenImg.blitToScreen(0,0);
 	}
 
 	protected void keyRepeated(int kcode) // 按钮连按响应
@@ -245,25 +234,25 @@ public class MineCanvas extends Canvas implements CommandListener {
 		}
 		if (selx < 0)
 			selx = 0;
-		if (selx > Width - 1)
-			selx = Width - 1;
+		if (selx > width - 1)
+			selx = width - 1;
 		if (sely < 0)
 			sely = 0;
-		if (sely > Height - 1)
-			sely = Height - 1;
+		if (sely > height - 1)
+			sely = height - 1;
 
 		DrawBlock(oldx, oldy, false);
 		DrawBlock(selx, sely, true);
 		this.repaint();
-		// ExScreenImg.blitToScreen(0,0);
+		// exScreenImg.blitToScreen(0,0);
 	}
 
 	// 是否全部完成判断
 	private boolean Judge() {
 		if (leftbomb == 0) {
 			int i, j;
-			for (i = 0; i < Height; i++) {
-				for (j = 0; j < Width; j++) {
+			for (i = 0; i < height; i++) {
+				for (j = 0; j < width; j++) {
 					if (grid[i][j] >= 10 && grid[i][j] < 20)
 						return false;
 				}
@@ -275,31 +264,46 @@ public class MineCanvas extends Canvas implements CommandListener {
 
 	// 菜单选择响应
 	public void commandAction(Command cmd, Displayable displayable) {
-		boolean savepara = false;
-		if (cmd == ExitCmd)
-			pMain.comeBack();
-		else if (cmd == StartCmd) {
+//		boolean savepara = false;
+		if (cmd == exitCmd)
+			mianMIDlet.comeBack();
+		else if (cmd == startCmd) {
 			newGame();
 		}
 	}
-
+	public void setMineCount(){
+		if(degree==1){
+			mineCount =10;
+			width = 10;
+			height = 10;
+		}else if(degree ==2 ){
+			mineCount = 40;
+			width = 20;
+			height = 20;
+		}else if(degree ==3){
+			mineCount = 99;
+			width = 28;
+			height = 28;
+		}
+	}
 	// 开始新游戏
-	private void newGame() {
+	public void newGame() {
+		
 		gameover = false;
 		selx = 0;
 		sely = 0;
-		leftbomb = MINECOUNT;
+		leftbomb = mineCount;
 
 		int i, j, x, y;
-		for (i = 0; i < Height; i++) {
-			for (j = 0; j < Width; j++)
+		for (i = 0; i < height; i++) {
+			for (j = 0; j < width; j++)
 				grid[i][j] = 10;
 		}
 
-		for (i = 0; i < MINECOUNT; i++) {
+		for (i = 0; i < mineCount; i++) {
 			while (true) {
-				x = Math.abs(rand.nextInt()) % Width;
-				y = Math.abs(rand.nextInt()) % Height;
+				x = Math.abs(rand.nextInt()) % width;
+				y = Math.abs(rand.nextInt()) % height;
 				if (grid[y][x] != 19) {
 					grid[y][x] = 19;
 					break;
@@ -307,8 +311,8 @@ public class MineCanvas extends Canvas implements CommandListener {
 			}
 		}
 
-		for (i = 0; i < Height; i++) {
-			for (j = 0; j < Width; j++) {
+		for (i = 0; i < height; i++) {
+			for (j = 0; j < width; j++) {
 
 				if (grid[i][j] == 19)
 					continue;
@@ -316,12 +320,12 @@ public class MineCanvas extends Canvas implements CommandListener {
 				for (k = -1; k < 2; k++) {
 					if (i + k < 0)
 						continue;
-					if (i + k >= Height)
+					if (i + k >= height)
 						continue;
 					for (l = -1; l < 2; l++) {
 						if (l + j < 0)
 							continue;
-						if (l + j >= Width)
+						if (l + j >= width)
 							continue;
 						if (k == 0 && l == 0)
 							continue;
@@ -333,29 +337,29 @@ public class MineCanvas extends Canvas implements CommandListener {
 			}
 		}
 
-		Exg.setColor(0xffffff);
-		Exg.fillRect(0, 0, ExScreenImg.getWidth(), ExScreenImg.getHeight());
-		// Exg.fillRect(0, 0, getWidth(), getHeight());
-		Exg.setColor(0);
-		// ExScreenImg.clear((byte)0);
-		for (i = 0; i <= Width; i++) {
-			Exg.drawLine(i * GRIDSIZE, 0, i * GRIDSIZE, Height * GRIDSIZE);
+		g.setColor(0xffffff);
+		g.fillRect(0, 0, exScreenImg.getWidth(), exScreenImg.getHeight());
+		// g.fillRect(0, 0, getWidth(), getHeight());
+		g.setColor(0);
+		// exScreenImg.clear((byte)0);
+		for (i = 0; i <= width; i++) {
+			g.drawLine(i * gridSize, 0, i * gridSize, height * gridSize);
 		}
-		for (i = 0; i <= Height; i++) {
-			Exg.drawLine(0, i * GRIDSIZE, Width * GRIDSIZE, i * GRIDSIZE);
+		for (i = 0; i <= height; i++) {
+			g.drawLine(0, i * gridSize, width * gridSize, i * gridSize);
 		}
 
-		for (i = 0; i < Height; i++) {
-			for (j = 0; j < Width; j++) {
-				Exg.drawImage(HideImg, j * GRIDSIZE + 1, i * GRIDSIZE + 1, 20);
+		for (i = 0; i < height; i++) {
+			for (j = 0; j < width; j++) {
+				g.drawImage(hideImg, j * gridSize + 1, i * gridSize + 1, 20);
 			}
 		}
-		Exg.drawImage(fHideImg, selx * GRIDSIZE + 1, sely * GRIDSIZE + 1, 20);
-		Exg.drawString("剩", Width * GRIDSIZE + 15, 0, Graphics.RIGHT
+		g.drawImage(fhideImg, selx * gridSize + 1, sely * gridSize + 1, 20);
+		g.drawString("剩", width * gridSize + 15, 0, Graphics.RIGHT
 				| Graphics.TOP);
-		Exg.drawString("余", Width * GRIDSIZE + 15, 13, Graphics.RIGHT
+		g.drawString("余", width * gridSize + 15, 13, Graphics.RIGHT
 				| Graphics.TOP);
-		Exg.drawString(""+leftbomb, Width*GRIDSIZE+15, 26, Graphics.RIGHT |
+		g.drawString(""+leftbomb, width*gridSize+15, 26, Graphics.RIGHT |
 		 Graphics.TOP);
 		this.repaint();
 
@@ -368,41 +372,41 @@ public class MineCanvas extends Canvas implements CommandListener {
 		int retval = 0;
 		if (grid[y][x] == 0) {
 			if (!focus)
-				Exg.setColor(0xffffff);
-			Exg.fillRect(x * GRIDSIZE + 1, y * GRIDSIZE + 1, GRIDSIZE - 1,
-					GRIDSIZE - 1);
+				g.setColor(0xffffff);
+			g.fillRect(x * gridSize + 1, y * gridSize + 1, gridSize - 1,
+					gridSize - 1);
 			if (!focus)
-				Exg.setColor(0);
+				g.setColor(0);
 		} else if (grid[y][x] > 0 && grid[y][x] < 9) {
 			if (focus)
-				Exg.drawImage(fNumImg[grid[y][x] - 1], x * GRIDSIZE + 1, y
-						* GRIDSIZE + 1, 20);
+				g.drawImage(fnumImg[grid[y][x] - 1], x * gridSize + 1, y
+						* gridSize + 1, 20);
 			else
-				Exg.drawImage(NumImg[grid[y][x] - 1], x * GRIDSIZE + 1, y
-						* GRIDSIZE + 1, 20);
+				g.drawImage(numImg[grid[y][x] - 1], x * gridSize + 1, y
+						* gridSize + 1, 20);
 		} else if (grid[y][x] == 9) {
 			int i, j;
-			for (i = 0; i < Height; i++) {
-				for (j = 0; j < Width; j++) {
+			for (i = 0; i < height; i++) {
+				for (j = 0; j < width; j++) {
 					if (grid[i][j] == 19 || grid[i][j] == 29)
-						Exg.drawImage(MineImg, j * GRIDSIZE + 1, i * GRIDSIZE
+						g.drawImage(mineImg, j * gridSize + 1, i * gridSize
 								+ 1, 20);
 				}
 			}
 			if (focus)
-				Exg.drawImage(fMineImg, x * GRIDSIZE + 1, y * GRIDSIZE + 1, 20);
+				g.drawImage(fmineImg, x * gridSize + 1, y * gridSize + 1, 20);
 
 			retval = 1;
 		} else if (grid[y][x] >= 10 && grid[y][x] < 20) {
 			if (focus)
-				Exg.drawImage(fHideImg, x * GRIDSIZE + 1, y * GRIDSIZE + 1, 20);
+				g.drawImage(fhideImg, x * gridSize + 1, y * gridSize + 1, 20);
 			else
-				Exg.drawImage(HideImg, x * GRIDSIZE + 1, y * GRIDSIZE + 1, 20);
+				g.drawImage(hideImg, x * gridSize + 1, y * gridSize + 1, 20);
 		} else {
 			if (focus)
-				Exg.drawImage(fFlagImg, x * GRIDSIZE + 1, y * GRIDSIZE + 1, 20);
+				g.drawImage(fflagImg, x * gridSize + 1, y * gridSize + 1, 20);
 			else
-				Exg.drawImage(FlagImg, x * GRIDSIZE + 1, y * GRIDSIZE + 1, 20);
+				g.drawImage(flagImg, x * gridSize + 1, y * gridSize + 1, 20);
 		}
 
 		return retval; // 返回值：1-画的是地雷；0-不是
@@ -413,12 +417,12 @@ public class MineCanvas extends Canvas implements CommandListener {
 		for (i = -1; i < 2; i++) {
 			if (y + i < 0)
 				continue;
-			if (y + i >= Height)
+			if (y + i >= height)
 				continue;
 			for (j = -1; j < 2; j++) {
 				if (x + j < 0)
 					continue;
-				if (x + j >= Width)
+				if (x + j >= width)
 					continue;
 				if (i == 0 && j == 0)
 					continue;
@@ -438,12 +442,12 @@ public class MineCanvas extends Canvas implements CommandListener {
 		for (i = -1; i < 2; i++) {
 			if (y + i < 0)
 				continue;
-			if (y + i >= Height)
+			if (y + i >= height)
 				continue;
 			for (j = -1; j < 2; j++) {
 				if (x + j < 0)
 					continue;
-				if (x + j >= Width)
+				if (x + j >= width)
 					continue;
 				if (i == 0 && j == 0)
 					continue;
@@ -458,12 +462,12 @@ public class MineCanvas extends Canvas implements CommandListener {
 		for (i = -1; i < 2; i++) {
 			if (y + i < 0)
 				continue;
-			if (y + i >= Height)
+			if (y + i >= height)
 				continue;
 			for (j = -1; j < 2; j++) {
 				if (x + j < 0)
 					continue;
-				if (x + j >= Width)
+				if (x + j >= width)
 					continue;
 				if (i == 0 && j == 0)
 					continue;
@@ -474,11 +478,11 @@ public class MineCanvas extends Canvas implements CommandListener {
 					retval = false;
 				} else if (grid[y + i][x + j] > 20 && grid[y + i][x + j] != 29) // 在标记错误的地方画叉
 				{
-					Exg.drawLine((x + j) * GRIDSIZE + 1,
-							(y + i) * GRIDSIZE + 1, (x + j + 1) * GRIDSIZE - 1,
-							(y + i + 1) * GRIDSIZE - 1);
-					Exg.drawLine((x + j) * GRIDSIZE + 1, (y + i + 1) * GRIDSIZE
-							- 1, (x + j + 1) * GRIDSIZE - 1, (y + i) * GRIDSIZE
+					g.drawLine((x + j) * gridSize + 1,
+							(y + i) * gridSize + 1, (x + j + 1) * gridSize - 1,
+							(y + i + 1) * gridSize - 1);
+					g.drawLine((x + j) * gridSize + 1, (y + i + 1) * gridSize
+							- 1, (x + j + 1) * gridSize - 1, (y + i) * gridSize
 							+ 1);
 				}
 			}
@@ -488,12 +492,12 @@ public class MineCanvas extends Canvas implements CommandListener {
 			for (i = -1; i < 2; i++) {
 				if (y + i < 0)
 					continue;
-				if (y + i >= Height)
+				if (y + i >= height)
 					continue;
 				for (j = -1; j < 2; j++) {
 					if (x + j < 0)
 						continue;
-					if (x + j >= Width)
+					if (x + j >= width)
 						continue;
 					if (i == 0 && j == 0)
 						continue;

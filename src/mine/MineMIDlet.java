@@ -13,15 +13,16 @@ import javax.microedition.midlet.MIDletStateChangeException;
 
 public class MineMIDlet extends MIDlet implements CommandListener {
 
-	private static Display dis;
-	Image img = null;
-	Form frm = new Form("扫雷游戏");
-	private static Command startCmd = new Command("开始游戏", Command.OK, 1);
-	private static Command setCmd = new Command("设置游戏", Command.OK, 1);
-	private static Command exitCmd = new Command("退出", Command.EXIT, 2);
-	private static Command helpCmd = new Command("帮助信息", Command.OK, 3);
-	private static Command okCmd = new Command("确定", Command.OK, 0);
-
+	private Display dis;
+	private Image img = null;
+	private Options options;
+	private Form frm ;
+	private  Command startCmd = new Command("开始游戏", Command.OK, 1);
+	private  Command setCmd = new Command("设置游戏", Command.OK, 1);
+	private  Command exitCmd = new Command("退出", Command.EXIT, 2);
+	private  Command helpCmd = new Command("帮助信息", Command.OK, 3);
+	private  Command okCmd = new Command("确定", Command.OK, 0);
+	private MineCanvas mineCanvas;
 	public MineMIDlet() {
 		try {
 			img = Image.createImage("/images/title.png");
@@ -29,6 +30,9 @@ public class MineMIDlet extends MIDlet implements CommandListener {
 			e.printStackTrace();
 		}
 		dis = Display.getDisplay(this);
+		frm = new Form("扫雷游戏");
+		options = new Options(this);
+		
 	}
 
 	protected void startApp() throws MIDletStateChangeException {
@@ -47,7 +51,7 @@ public class MineMIDlet extends MIDlet implements CommandListener {
 			notifyDestroyed();
 		}
 		if (c == startCmd) {
-			MineCanvas mineCanvas = new MineCanvas(this);
+			mineCanvas = new MineCanvas(this,options.getDegree());
 			dis.setCurrent(mineCanvas);
 		}
 		if (c == helpCmd) {
@@ -61,12 +65,11 @@ public class MineMIDlet extends MIDlet implements CommandListener {
 			dis.setCurrent(frm);
 		}
 		if(c == setCmd){
-			
+			dis.setCurrent(options.getForm());
 		}
 	}
 
 	protected void pauseApp() {
-
 	}
 
 	protected void destroyApp(boolean arg0) {

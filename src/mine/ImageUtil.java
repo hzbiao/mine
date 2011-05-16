@@ -145,7 +145,7 @@ public class ImageUtil
           int srcH = src.getHeight();  
           int[] srcPixels = getPixels(src);
           int[] desPixels = new int[cut_width*cut_height];
-          int argb;
+//          int argb;
    int num = 0;
           for (int i = 0; i < srcH; i++)
           {
@@ -281,11 +281,11 @@ public class ImageUtil
          int r1 = 0;
          int g1 = 0;
          int b1 = 0;
-         int a1 = 0;
+//         int a1 = 0;
          int r2 = 0;
          int g2 = 0;
          int b2 = 0;
-         int a2 = 0;
+//         int a2 = 0;
          
          for (int i = 0; i < srcH; i++)
          {
@@ -408,10 +408,10 @@ public class ImageUtil
         switch(direction)
         {
                   case 1:
-                            sprite.setTransform(sprite.TRANS_ROT270);
+                            sprite.setTransform(Sprite.TRANS_ROT270);
                             break;
                   case 2:
-                            sprite.setTransform(sprite.TRANS_ROT90);   
+                            sprite.setTransform(Sprite.TRANS_ROT90);   
                             break;
         }
        
@@ -438,11 +438,11 @@ public class ImageUtil
          int r1 = 0;
          int g1 = 0;
          int b1 = 0;
-         int a1 = 0;
+//         int a1 = 0;
          int r2 = 0;
          int g2 = 0;
          int b2 = 0;
-         int a2 = 0;
+//         int a2 = 0;
          
          for (int i = 0; i < srcH; i++)
          {
