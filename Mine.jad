@@ -1,7 +1,7 @@
 MIDlet-Version: 1.0.0
 MIDlet-Vendor: Midlet Suite Vendor
 MIDlet-Jar-URL: Mine.jar
-MIDlet-2: MGame,,mine.MGame
+MIDlet-2: MGame,,mine.MineMIDletCanvas
 MicroEdition-Configuration: CLDC-1.0
 MIDlet-1: Mine,,mine.Mine
 MicroEdition-Profile: MIDP-1.0
